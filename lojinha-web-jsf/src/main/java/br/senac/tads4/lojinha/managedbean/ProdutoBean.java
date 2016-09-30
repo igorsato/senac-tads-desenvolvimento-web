@@ -28,8 +28,10 @@ import br.senac.tads4.lojinha.service.ProdutoService;
 import br.senac.tads4.lojinha.service.fakeimpl.ProdutoServiceFakeImpl;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Named;
 import javax.enterprise.context.RequestScoped;
+import javax.faces.context.FacesContext;
 
 /**
  *
@@ -39,24 +41,28 @@ import javax.enterprise.context.RequestScoped;
 @RequestScoped
 public class ProdutoBean implements Serializable {
 
-  // @ManagedProperty permite associar um parametro passado na requisição
-  // Só funciona se bean usar @ManagedBean
-  // Se não usar, tem que obter usando o FacesContext.getCurrentInstance.getRequestParameterMap()
   private Long idProduto;
+  
+  private Produto produto = null;
 
   public ProdutoBean() {
   }
 
   public List<Produto> getLista() {
     ProdutoService service = new ProdutoServiceFakeImpl();
-    //Categoria cat = new Categoria(2, "teste");
     return service.listar(0, 1000);
   }
 
   public Produto getProduto() {
-    //FacesContext fc = FacesContext.getCurrentInstance();
-    //return obter(getIdParam(fc));
-    return obter(getIdProduto());
+    if (produto == null) {
+      // FacesContext: objeto que contém todas as informações relacionadas ao
+      // processamento da requisição e geração da resposta dentro do ciclo do
+      // JSF
+      // http://docs.oracle.com/javaee/6/api/javax/faces/context/FacesContext.html
+      FacesContext fc = FacesContext.getCurrentInstance();
+      produto = obter(getIdParam(fc));
+    }
+    return produto;
   }
 
   private Produto obter(long idProduto) {
@@ -64,10 +70,11 @@ public class ProdutoBean implements Serializable {
     return service.obter(idProduto);
   }
 
-//    private Long getIdParam(FacesContext fc) {
-//        Map<String, String> params = fc.getExternalContext().getRequestParameterMap();
-//        return Long.parseLong(params.get("id"));
-//    }
+  private Long getIdParam(FacesContext fc) {
+    Map<String, String> params = fc.getExternalContext()
+	    .getRequestParameterMap();
+    return Long.parseLong(params.get("id"));
+  }
 
   public Long getIdProduto() {
     return idProduto;
